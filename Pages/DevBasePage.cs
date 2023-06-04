@@ -16,7 +16,7 @@ public abstract class DevBasePage
     {
         _driver = driver;
         _action = new Actions(_driver);
-        _wait = new WebDriverWait(_driver,TimeSpan.FromSeconds(15));
+        _wait = new WebDriverWait(_driver,TimeSpan.FromSeconds(10));
     }
 
     protected void GoToUrl(string url)

@@ -7,19 +7,46 @@ namespace DevBy.Pages;
 internal class VacanciesPage: DevBasePage
 {
     List<IWebElement> _vacanciesButtons = new List<IWebElement>();
+    IWebElement _vacanciesNuvButton;
     int _allVacanciesCount;
 
+    const string ADS_GOOGLE_XPATH = "//ins[@class='adsbygoogle adsbygoogle-noablate' and @data-vignette-loaded]";
+    const string VACANCIES_PAGE_XPATH = "//a[@class = 'navbar__nav-item navbar__nav-item_label']";
     const string VACANCIES_LIST_XPATH = "//span[@class='radio']";
     const string CLOSE_REKLAMA = "//button[@class='wishes-popup__button-close wishes-popup__button-close_icon']";
-
+    const string NUMBER_OF_VACANCIES_XPATH = "//h1";
     public VacanciesPage(IWebDriver driver):base(driver)
     {
-        _driver = driver;
-        //driver.ExecuteJavaScript("return document.getElementsByClassName('adsbygoogle adsbygoogle-noablate')[0];");
+        //IWebElement iframe = FindDevByElement("//iframe[@id='google_esf']");
+        //((IJavaScriptExecutor)driver).ExecuteScript("arguments[0].remove();", iframe);
+        //var adv = FindDevByElement("//ins[@class='adsbygoogle adsbygoogle-noablate'][2]");
+        //((IJavaScriptExecutor)driver).ExecuteScript("arguments[0].remove();", adv);
+        //"//iframe[@title='iframe' and @src]"
+        //ins[@class='adsbygoogle adsbygoogle-noablate']
+        //driver.ExecuteJavaScript("return document.getElementById('ad_position_box')[0];");
+        //driver.SwitchTo().Frame(FindDevByElement("//iframe[@id='ad_iframe'"));
+        //driver.SwitchTo().Window(driver.CurrentWindowHandle);
+        //iframe[@id="aswift_1"]
+        //iframe[@id='ad_frame']
+        //driver.SwitchTo().Frame(driver.FindElement(By.XPath("//iframe[@id=\"aswift_1")));
+        //var closeButtonAds = driver.FindElement(By.XPath("//div[@id='dismiss-button']"));
+        //ClickElement(closeButtonAds);
 
-        driver.ExecuteJavaScript("return document.getElementsByClassName('wishes-popup__content')[0];");
+        IWebElement ads = null;
+        try { ads = driver.FindElement(By.XPath(ADS_GOOGLE_XPATH)); }
+        catch (NoSuchElementException) { }
+        if (ads != null && ads.Displayed)
+        {
+            driver.Navigate().Refresh();
+            _vacanciesNuvButton = FindDevByElement(VACANCIES_PAGE_XPATH);
+            ClickElement(_vacanciesNuvButton);
+
+        }
+
+        driver.ExecuteJavaScript("return document.getElementsByClassName('wishes-popup__content')[0];");//запуск рекламы
         var closeRekl = FindDevByElement(CLOSE_REKLAMA);
         ClickElement(closeRekl);
+
         Initialize();
     }
 
@@ -35,21 +62,13 @@ internal class VacanciesPage: DevBasePage
         foreach (var item in _vacanciesButtons)
         {
             ClickElement(item);
-            var wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(30)); 
-            var _countVacancy = wait.Until(driver => driver.FindElement(By.XPath("//div[@class='vacancies-list__header-breadcrumbs js-vacancies-list-count']")));
-
-            var nameVacancy = FindDevByElement("//span[@class='vacancies-list__filter-tag__text']").Text;
-            var countVacancy = int.Parse(FindDevByElement("//h1").Text.Split(' ')[0]);
-            if (listVacancies.ContainsKey(nameVacancy))
-                {
-                continue;
-                }
-
-             listVacancies.Add(nameVacancy, countVacancy);
+            Thread.Sleep(500);
+            var numberOfVacancy = int.Parse(FindDevByElement(NUMBER_OF_VACANCIES_XPATH).Text.Split(' ')[0]);
+            listVacancies.Add(item.Text, numberOfVacancy);
         }
         return listVacancies;
-
     }
+
     public bool CheckNumberVacancies(int number)
     {
         return _allVacanciesCount == number;
@@ -60,6 +79,7 @@ internal class VacanciesPage: DevBasePage
         _vacanciesButtons.AddRange(FindDevByElements(VACANCIES_LIST_XPATH));
         _allVacanciesCount = int.Parse(FindDevByElement("//h1[@ class='vacancies-list__header-title']").Text.Split(' ')[0]);
     }
+
     public void Uninitialize()
     {
         _driver.Close();
